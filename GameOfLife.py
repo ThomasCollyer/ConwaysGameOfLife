@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import font as tkFont
 import random
 from time import sleep
 
@@ -7,8 +8,8 @@ root= tk.Tk()
 root.title("Simulator")
 
 #Create the canvas within the window
-canvas_width = 500
-canvas_height = 500
+canvas_width = 700
+canvas_height = 700
 canvas = tk.Canvas(root, width=canvas_width, height=canvas_height)
 canvas.pack()
 
@@ -78,7 +79,7 @@ coordinates = [(start_x1,start_y1,start_x2,start_y2)]
 current_pos = start_x2
 
 #Get the coordinates for the squares of the first row
-while current_pos+23 <= canvas_width:
+while current_pos+23 <= canvas_width-200:
     new_x1= coordinates[-1][0] + 23
     new_y1= coordinates[-1][1]
     new_x2= coordinates[-1][2] + 23
@@ -91,9 +92,8 @@ while current_pos+23 <= canvas_width:
 #Get all coordinates
 y_increment = 23
 
-
 for coords in coordinates:
-    if coords[3]+y_increment>=canvas_height:
+    if coords[3]+y_increment>=canvas_height-200:
         break
     new_x1 = coords[0]
     new_y1 = coords[1] + y_increment
@@ -104,10 +104,11 @@ for coords in coordinates:
 
 
 class cell:
-    def __init__ (self,canvas, x1, y1, x2, y2):
+    def __init__ (self,canvas, x1, y1, x2, y2, position):
         self.canvas = canvas
         self.cell = canvas.create_rectangle(x1, y1, x2, y2, fill="black")
         self.state = False
+        self.position = position
         canvas.tag_bind(self.cell, "<Button-1>", self.toggle)
 
     def toggle(self, event=None):
@@ -115,11 +116,34 @@ class cell:
         new_color = "white" if self.state else "black"
         self.canvas.itemconfig(self.cell, fill=new_color)
 
+    def get_status(self):
+        if self.state == True:
+            return 'alive'
+        else:
+            return 'dead'
+
+    def get_neighbours(self):
+        #A neighbour is considered to be any cell within one cell of this cell (including diagnonally)
+        pass
+        #Case 1: Cell is not on the boundary
+        
+
+        #Case 2: Cell is on the boundary
+    
+    def update_status(self):
+        #First get the number of cells in each row
+        no_cells_per_row = (cell_list[-1][1]+1)**0.5
+        
+        
+
     
 cell_list = []
+coordinate_position = 0
 for coords in coordinates:
     a,b,c,d = coords
-    cell_list.append(cell(canvas,a,b,c,d))
+    coordinate_position += 1
+    cell_list.append(cell(canvas,a,b,c,d,coordinate_position))
+
 ##def draw_cells(index=0):
 ##    if index < len(coordinates):
 ##        x1, y1, x2, y2 = coordinates[index]
@@ -128,6 +152,12 @@ for coords in coordinates:
 ##        root.after(200, draw_cells, index + 1)
 ##
 ##draw_cells()
+
+begin_game_btn = tk.Button(root, text="Begin")
+helv36 = tkFont.Font(family='Helvetica', size=30, weight='bold')
+begin_game_btn['font'] = helv36
+canvas.create_window(600, 50, window=begin_game_btn, height=50)
+
 
 def update():
     pass

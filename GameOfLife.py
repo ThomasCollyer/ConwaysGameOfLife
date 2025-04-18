@@ -13,63 +13,6 @@ canvas_height = 700
 canvas = tk.Canvas(root, width=canvas_width, height=canvas_height)
 canvas.pack()
 
-#Add a rectangle to the canvas
-#The first two coordinates are where the top left corner starts
-#The last two coordinates are where the bottom right corner starts
-#canvas.create_rectangle(2, 24, 23, 46, fill="blue")
-#canvas.create_rectangle(25, 1, 46, 22, fill="red")
-
-##def agents_overlap(agent1, agent2):
-##    #These get the bounding box positions of the agents on the screen
-##    x1,y1,x2,y2 = agent1.canvas.bbox(agent1.rect)
-##    a1,b1,a2,b2 = agent2.canvas.bbox(agent2.rect)
-##
-##    #We then check if the bouding boxes overlap at all
-##    #This will return true or false
-##    return (
-##        x1 < a2 and x2 > a1 and
-##        y1 < b2 and y2 > b1
-##    )
-##
-##class Agent:
-##    def __init__(self, canvas):
-##        self.canvas = canvas
-##        self.x = 100
-##        self.y = 100
-##        self.size = random.randint(5,100)
-##        self.rect = canvas.create_rectangle( (self.x,self.y,self.x+self.size,self.y+self.size))
-##
-##    def move(self):
-##        #Defines how the agent moves
-##        dx = random.randint(-1,1)
-##        dy = random.randint(-1,1)
-##        self.canvas.move(self.rect, dx, dy) 
-##
-##        self.x += dx
-##        self.y += dy
-##
-##    def get_pos(self):
-##        #Gets the agents current position
-##        return self.x, self.y
-##
-###Create the agents
-##agent = Agent(canvas)
-##agent2 = Agent(canvas)
-
-##def update():
-##    agent.move()
-##    agent2.move()
-##    
-##    if agents_overlap(agent, agent2):
-##        #print("Collision detected!")
-##        canvas.itemconfig(agent.rect, fill="red")
-##        canvas.itemconfig(agent2.rect, fill="red")
-##    else:
-##        canvas.itemconfig(agent.rect, fill="blue")
-##        canvas.itemconfig(agent2.rect, fill="blue")
-##    #print(agent.get_pos())
-##    root.after(50, update)
-
 start_x1 = 2
 start_x2 = 23
 start_y1 = 1
@@ -111,10 +54,12 @@ class cell:
         self.position = position
         canvas.tag_bind(self.cell, "<Button-1>", self.toggle)
 
+
     def toggle(self, event=None):
         self.state = not self.state
         new_color = "white" if self.state else "black"
         self.canvas.itemconfig(self.cell, fill=new_color)
+        print(self.position)
 
     def get_status(self):
         if self.state == True:
@@ -122,46 +67,146 @@ class cell:
         else:
             return 'dead'
 
-    def get_neighbours(self):
-        #A neighbour is considered to be any cell within one cell of this cell (including diagnonally)
-        pass
-        #Case 1: Cell is not on the boundary
-        
+    def get_left_neighbour(self):
+        #A cell has a left neighbour if it is not in the first column
+        left_boundary_cells = [int(no_cells_per_row+1)*(i) for i in range(int(no_cells_per_row+1))]
+        if self.position in left_boundary_cells:
+            return 'no neighbour'
+        else:
+            return self.position-1
 
-        #Case 2: Cell is on the boundary
+    def get_right_neighbour(self):
+        #A cell has a left neighbour if it is not in the first column
+        right_boundary_cells = [int((no_cells_per_row)*(i)+no_cells_per_row) for i in range(int(no_cells_per_row+1))]
+        if self.position in right_boundary_cells:
+            return 'no neighbour'
+        else:
+            return self.position+1
+
+    def get_above_neighbour(self):
+        #A cell has an above neighbour if it is not in the first row
+        above_bounary_cells = [i for i in range(int(no_cells_per_row+1))]
+        if self.position in above_bounary_cells:
+            return 'no neighbour'
+        else:
+            return self.position-21
+
+    def get_below_neighbour(self):
+        #A cell has a below neighbour if it is not in the last row
+        below_bounary_cells = below_bounary_cells = [int(((no_cells_per_row-1)*no_cells_per_row)+i+1) for i in range(int(no_cells_per_row+1))] 
+        if self.position in below_bounary_cells:
+            return 'no neighbour'
+        else:
+            return self.position+21
+
+    def get_upper_left_diagonal_neighbour(self):
+        #A cell has an upper left diagonal neihbour if it is not in the first row and first column
+        if (self.get_above_neighbour() != 'no neighbour')  and (self.get_left_neighbour() !='no neighbour'):
+            return self.position-22
+        else:
+            return 'no neighbour'
+
+    def get_upper_right_diagonal_neighbour(self):
+        #A cell has an upper right diagonal neihbour if it is not in the first row and last column
+        if (self.get_above_neighbour() != 'no neighbour')  and (self.get_right_neighbour() != 'no neighbour'):
+            return self.position-20
+        else:
+            return 'no neighbour'
+
+    def get_lower_left_diagonal_neighbour(self):
+        #A cell has a lower left diagonal neihbour if it is not in the last row and first column
+        if (self.get_below_neighbour() != 'no neighbour')  and (self.get_left_neighbour() != 'no neighbour'):
+            return self.position+20
+        else:
+            return 'no neighbour'
+
+    def get_lower_right_diagonal_neighbour(self):
+        #A cell has a lower right diagonal neihbour if it is not in the last row and last column
+        if (self.get_below_neighbour() != 'no neighbour')  and (self.get_right_neighbour() != 'no neighbour'):
+            return self.position+22
+        else:
+            return 'no neighbour'
+      
     
     def update_status(self):
-        #First get the number of cells in each row
-        no_cells_per_row = (cell_list[-1][1]+1)**0.5
+        #At this stage, the cell determines whether it is alive or dead and updates itself accordingly
+        current_status = self.state
+
+        #We need to get the statuses of each neighbour
+        neighbour_info = []
+        neighbour_info.append(self.get_left_neighbour())
+        neighbour_info.append(self.get_right_neighbour())
+        neighbour_info.append(self.get_above_neighbour())
+        neighbour_info.append(self.get_below_neighbour())
+        neighbour_info.append(self.get_upper_left_diagonal_neighbour())
+        neighbour_info.append(self.get_upper_right_diagonal_neighbour())
+        neighbour_info.append(self.get_lower_left_diagonal_neighbour())
+        neighbour_info.append(self.get_lower_right_diagonal_neighbour())
+
+        neighbour_statuses = []
+        for info in neighbour_info:
+            if info == 'no neighbour':
+                neighbour_statuses.append('no neighbour')
+            else:
+                neighbour_statuses.append(cell_list[info].state)
+
+        total_alive_neighbours = sum(item for item in neighbour_statuses if isinstance(item, bool))
+
+        #Conditions for survial and death
+        if (total_alive_neighbours > 3) and (self.state == False):
+            return 0
+        elif (total_alive_neighbours > 3) and (self.state == True):
+            return 0
+        elif (total_alive_neighbours < 2) and (self.state == False):
+            return 0
+        elif (total_alive_neighbours < 2) and (self.state == True):
+            return 0
+        elif (total_alive_neighbours in (2,3)) and (self.state == True):
+            return 1
+        elif (total_alive_neighbours == 3) and (self.state == False):
+            return 1
+        elif (total_alive_neighbours in (2,3)) and (self.state == False):
+            return 0
+
+
+    def execute_status(self, new_status):
+        if new_status == 1:
+            self.canvas.itemconfig(self.cell, fill='white')
+            self.state = True
+        else:
+            self.canvas.itemconfig(self.cell, fill='black')
+            self.state = False
+        
         
         
 
-    
+
 cell_list = []
 coordinate_position = 0
 for coords in coordinates:
     a,b,c,d = coords
-    coordinate_position += 1
     cell_list.append(cell(canvas,a,b,c,d,coordinate_position))
+    coordinate_position += 1
 
-##def draw_cells(index=0):
-##    if index < len(coordinates):
-##        x1, y1, x2, y2 = coordinates[index]
-##        cell_list.append(cell(canvas, x1, y1, x2, y2))
-##        # Schedule the next one after 200ms
-##        root.after(200, draw_cells, index + 1)
-##
-##draw_cells()
+#Get the number of cells per row
+no_cells_per_row = (cell_list[-1].position)**0.5
 
-begin_game_btn = tk.Button(root, text="Begin")
+
+def play_round():
+    new_status = []
+    for cell in cell_list:
+            new_status.append(cell.update_status())
+    for i in range(len(cell_list)):
+        cell_list[i].execute_status(new_status[i])
+    root.after(200, play_round)
+
+begin_game_btn = tk.Button(canvas, text="Begin", command=play_round)
+#tk.Button(canvas, text="Debug ", command=debug_func)
 helv36 = tkFont.Font(family='Helvetica', size=30, weight='bold')
 begin_game_btn['font'] = helv36
 canvas.create_window(600, 50, window=begin_game_btn, height=50)
 
 
-def update():
-    pass
 
-update()  # start the loop
 
 root.mainloop()

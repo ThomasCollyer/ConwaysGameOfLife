@@ -59,7 +59,6 @@ class cell:
         self.state = not self.state
         new_color = "white" if self.state else "black"
         self.canvas.itemconfig(self.cell, fill=new_color)
-        print(self.position)
 
     def get_status(self):
         if self.state == True:
